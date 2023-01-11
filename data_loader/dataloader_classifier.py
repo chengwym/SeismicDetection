@@ -2,15 +2,21 @@ import os
 import torch
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
+from sklearn.model_selection import train_test_split
 
-from utils.preprocess import get_dataset
-train_dirs, val_dirs, test_dirs = get_dataset()
 
 class SeismicDataet(Dataset):
     def __init__(self, mode):
         self.mode = mode
         self.CLASS = ['earthquakes', 'glacial']
         self.num_class = len(self.CLASS)
+        earthquakes = os.listdir('../data/earthquakes')
+        earthquakes = [f'../data/earthquakes/{file}' for file in earthquakes]
+        glacial = os.listdir('../data/glacial')
+        glacial = [f'../data/glacial/{file}' for file in glacial]
+        dirs = earthquakes + glacial
+        train_dirs, test_dirs = train_test_split(dirs, test_size=.2)
+        train_dirs, val_dirs = train_test_split(dirs, test_size=.3)
         self.train_dirs, self.val_dirs, self.test_dirs = train_dirs, val_dirs, test_dirs
 
     def __getitem__(self, index):

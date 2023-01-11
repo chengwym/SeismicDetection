@@ -12,3 +12,9 @@ model = {
     'epoches': 10,
 }
 
+opt = {
+    'alpha': 1e-2,
+    'beta1': 0.9,
+    'beta2': 0.9,
+    'epsilon': 1e-8
+}
