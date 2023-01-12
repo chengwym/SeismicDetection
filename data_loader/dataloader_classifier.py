@@ -3,7 +3,7 @@ import torch
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
-import matplotlib.image as mpimg
+import cv2
 
 from config.constant import RANDOM_STATE
 
@@ -28,7 +28,7 @@ class SeismicDataet(Dataset):
             path = self.train_dirs[index]
         else:
             path = self.val_dirs[index]
-        data = torch.FloatTensor(mpimg.imread(path))
+        data = torch.FloatTensor(np.transpose(cv2.imread(path), [2, 0, 1]))
         # print(data.shape)
         words = path.split('/')
         label = words[2]
