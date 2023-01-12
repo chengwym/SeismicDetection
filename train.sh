@@ -1,2 +1,2 @@
 python train.py
-tensorboard --logdir ./saving/logs
+# tensorboard --logdir ./saving/logs
