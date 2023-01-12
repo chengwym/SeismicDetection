@@ -7,8 +7,10 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torchvision.models import resnet152
 from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
+import numpy as np
+import matplotlib.pyplot as plt
 
+from config.constant import RANDOM_STATE
 from data_loader.dataloader_classifier import SeismicDataLoader
 from config.config import model, path, opt
 
@@ -22,7 +24,7 @@ def valid_part(dataloader: DataLoader,
             x = x.to(device)
             y = y.to(device)
             scores = model(x)
-            _loss = F.cross_entropy(x, scores)
+            _loss = F.cross_entropy(y, scores)
             loss += _loss.item()
     return loss
 
@@ -39,7 +41,8 @@ def check_accuracy(dataloader: DataLoader,
             y = y.to(device)
             scores = model(x)
             _, preds = scores.max(1)
-            num_correct += (preds == y).sum()
+            _, y_indice = y.max(1)
+            num_correct += (preds == y_indice).sum()
             num_samples += preds.size(0)
         acc = float(num_correct) / float(num_samples)
         if print_result == True:
@@ -63,38 +66,70 @@ def train(model: nn.Module,
             _loss.backward()
             optimizer.step()
             loss += _loss.item()
-        train_acc = check_accuracy(train_dataloader, model)
-        eval_acc = check_accuracy(eval_dataloader, model)
-        # writer.add_scalar('acc/eval_acc', eval_acc, global_step=epoch)
-        # writer.add_scalar('acc/train_acc', train_acc, global_step=epoch)
+        global_step.append(epoch)
+        train_acc = check_accuracy(train_dataloader, model, False)
+        eval_acc = check_accuracy(eval_dataloader, model, False)
+        acc_train.append(train_acc)
+        acc_valid.append(eval_acc)
         eval_loss = valid_part(eval_dataloader, model)
         train_loss = loss
-        # writer.add_scalar('loss/train_loss', train_loss, global_step=epoch)
-        # writer.add_scalar('loss/eval_loss', eval_loss, global_step=epoch)
-    
+        loss_train.append(train_loss)
+        loss_valid.append(eval_loss)
+
 
 if __name__ == '__main__':
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    np.random.seed(RANDOM_STATE)
+    torch.manual_seed(RANDOM_STATE)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(RANDOM_STATE)
+    
     batch_size = model['batch_size']
     device = model['device']
     epoches = model['epoches']
 
     tensorboard_path = path['tensorboard_path']
     model_path = path['model_path']
+    image_path = path['image_path']
     
     alpha = opt['alpha']
     beta1 = opt['beta1']
     beta2 = opt['beta2']
     epsilon = opt['epsilon']
 
-    model = resnet152()
+    model = resnet152(num_classes=2)
+    if torch.cuda.device_count() > 1:
+        model = nn.DataParallel(model)
+        print(f'Using {torch.cuda.device_count()} gpu')
+    
+    global_step = []
+    acc_train = []
+    acc_valid = []
+    loss_train = []
+    loss_valid = []
+
     model = model.to(device)
     optimizer = optim.Adam(model.parameters(), lr=alpha, betas=(beta1, beta2), eps=epsilon)
-    # writer = SummaryWriter(tensorboard_path)
     train_dataloader = SeismicDataLoader('train', batch_size, './data')
     eval_dataloader = SeismicDataLoader('eval', batch_size, './data')
     test_dataloader = SeismicDataLoader('test', batch_size, './data')
     print('datas are ready')
     train(model, optimizer, epoches)
     print('the train part has been done')
-    torch.save(model.state_dict(), model_path)
+
+    plt.plot(global_step, acc_train, 'b', label='train acc')
+    plt.plot(global_step, acc_valid, 'r', label='valid acc')
+    plt.title('Train and Valid Accuracy')
+    plt.legend(loc='lower right')
+    plt.savefig(f'{image_path}/acc.png')
+
+    plt.figure()
+    plt.plot(global_step, loss_train, 'b', label='train loss')
+    plt.plot(global_step, loss_valid, 'r', label='valid loss')
+    plt.title('Train and Valid Loss')
+    plt.legend(loc='upper right')
+    plt.savefig(f'{image_path}/loss.png')
+
+    torch.save(model.state_dict(), f'{model_path}/model.pt')
     check_accuracy(test_dataloader, model, True)

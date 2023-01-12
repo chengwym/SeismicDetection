@@ -1,3 +1,5 @@
+__author__ = "Jingbo Cheng"
+
 import os
 from PIL import Image
 from obspy import read
@@ -47,8 +49,8 @@ for index, path in enumerate(paths):
         EventStationPair = Geodesic.WGS84.Inverse(SourceLat,SourceLon,StationLatLon[StationName][0],StationLatLon[StationName][1], outmask=1929)
         DataStream[itrace].stats.distance = EventStationPair['s12']
 
-    DataStream.plot(outfile=f'../data/{EventListName}_img/{EventListName}_{FileName}.png', type='section')
-    img = Image.open(f'../data/{EventListName}_img/{EventListName}_{FileName}.png')
-    img.crop((80, 60, 960, 529)).save(f'../data/{EventListName}_img/{EventListName}_{FileName}.png')
+    DataStream.plot(outfile=f'../data/{EventListName}_img/{EventListName}_{FileName}.jpg', type='section')
+    img = Image.open(f'../data/{EventListName}_img/{EventListName}_{FileName}.jpg')
+    img.crop((80, 60, 960, 529)).save(f'../data/{EventListName}_img/{EventListName}_{FileName}.jpg')
 
     print(f'{index} {EventListName} {FileName} has been done')

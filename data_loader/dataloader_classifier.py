@@ -3,7 +3,7 @@ import torch
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
-import cv2
+import matplotlib.image as mpimg
 
 from config.constant import RANDOM_STATE
 
@@ -28,15 +28,13 @@ class SeismicDataet(Dataset):
             path = self.train_dirs[index]
         else:
             path = self.val_dirs[index]
-        data = torch.FloatTensor(np.transpose(cv2.imread(path), [2, 0, 1]))
-        # print(data.shape)
+        data = torch.FloatTensor(np.transpose(mpimg.imread(path).copy(), [2, 0, 1]))
         words = path.split('/')
         label = words[2]
-        # print(label)
         indice = self.CLASS.index(label)
-        target = torch.FloatTensor([indice])
-        # print(indice)
-        # print(target)
+        target = np.zeros(self.num_class)
+        target[indice] = 1
+        target = torch.FloatTensor(target)
         return data, target
 
     def __len__(self):
