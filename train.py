@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 from config.constant import RANDOM_STATE
 from data_loader.dataloader_classifier import SeismicDataLoader
-from config.config import model, path, opt
+from config.config import model_dict, path, opt
 
 def valid_part(dataloader: DataLoader,
                model: nn.Module,
@@ -31,6 +31,7 @@ def valid_part(dataloader: DataLoader,
 def check_accuracy(dataloader: DataLoader,
                    model: nn.Module,
                    print_result: bool = True,
+                   device=torch.device('cuda'),
 ):
     model.eval()
     num_correct = 0
@@ -85,9 +86,9 @@ if __name__ == '__main__':
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(RANDOM_STATE)
     
-    batch_size = model['batch_size']
-    device = model['device']
-    epoches = model['epoches']
+    batch_size = model_dict['batch_size']
+    device = model_dict['device']
+    epoches = model_dict['epoches']
 
     tensorboard_path = path['tensorboard_path']
     model_path = path['model_path']
@@ -101,7 +102,6 @@ if __name__ == '__main__':
     model = resnet152(num_classes=2)
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
-        print(f'Using {torch.cuda.device_count()} gpu')
     
     global_step = []
     acc_train = []

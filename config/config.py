@@ -6,9 +6,9 @@ path = {
     'tensorboard_path': '/saving/logs'
 }
 
-model = {
+model_dict = {
     'device': torch.device('cuda'),
-    'batch_size': 64,
+    'batch_size': 16,
     'epoches': 10,
 }
 
