@@ -8,13 +8,14 @@ path = {
 
 model_dict = {
     'device': torch.device('cuda'),
-    'batch_size': 16,
-    'epoches': 10,
+    'batch_size': 128,
+    'epoches': 1000,
 }
 
 opt = {
-    'alpha': 1e-2,
+    'alpha': 9e-7,
     'beta1': 0.9,
-    'beta2': 0.9,
-    'epsilon': 1e-8
+    'beta2': 0.98,
+    'epsilon': 1e-10,
+    'weight_decay': 9e-9
 }

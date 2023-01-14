@@ -98,6 +98,7 @@ if __name__ == '__main__':
     beta1 = opt['beta1']
     beta2 = opt['beta2']
     epsilon = opt['epsilon']
+    weight_decay = opt['weight_decay']
 
     model = resnet152(num_classes=2)
     if torch.cuda.device_count() > 1:
@@ -110,7 +111,7 @@ if __name__ == '__main__':
     loss_valid = []
 
     model = model.to(device)
-    optimizer = optim.Adam(model.parameters(), lr=alpha, betas=(beta1, beta2), eps=epsilon)
+    optimizer = optim.Adam(model.parameters(), lr=alpha, betas=(beta1, beta2), eps=epsilon, weight_decay=weight_decay)
     train_dataloader = SeismicDataLoader('train', batch_size, './data')
     eval_dataloader = SeismicDataLoader('eval', batch_size, './data')
     test_dataloader = SeismicDataLoader('test', batch_size, './data')
