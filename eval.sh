@@ -1,1 +1,1 @@
-python predict.py
+python supervised_predict.py

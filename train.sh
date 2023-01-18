@@ -1,2 +1,1 @@
-python train.py
-# tensorboard --logdir ./saving/logs
+python supervised_train.py binary

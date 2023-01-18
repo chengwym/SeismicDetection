@@ -12,7 +12,8 @@ import matplotlib.pyplot as plt
 import sys
 
 from config.constant import RANDOM_STATE
-from data_loader.dataloader_classifier import SeismicDataLoader
+from data_loader.dataloader_classifier import SeismicBinaryDataLoader
+from data_loader.dataloader_regression import SeismicRegDataLoader
 from config.config import model_dict, path, opt
 
 def valid_part(dataloader: DataLoader,
@@ -59,6 +60,7 @@ def check_accuracy_classifier(dataloader: DataLoader,
 def check_accuracy_regress(dataloader: DataLoader,
                            model: nn.Module,
                            print_result: bool = True,
+                           task: str = 'earthquakes',
                            device=torch.device('cuda')):
     """
     The accuracy of the task regression.
@@ -66,11 +68,18 @@ def check_accuracy_regress(dataloader: DataLoader,
     model.eval()
     num_correct = 0
     num_samples = 0
+    threshold = 1 if task == 'earthquakes' else 0.1
     with torch.no_grad():
         for x, y in dataloader:
             x = x.to(device)
             y = y.to(device)
             scores = model(x)
+            num_correct += ((scores - y) <= threshold).sum()
+            num_samples += y.size()[0]
+        acc = float(num_correct) / float(num_samples)
+        if print_result == True:
+            print(f'Got {num_correct}/{num_samples} correct {acc * 100}%')
+    return acc
             
     
 
@@ -115,6 +124,7 @@ def train(train_dataloader: DataLoader,
 
 if __name__ == '__main__':
     params = sys.argv
+    task = params[1]
     
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
@@ -137,10 +147,18 @@ if __name__ == '__main__':
     epsilon = opt['epsilon']
     weight_decay = opt['weight_decay']
 
-    if params[1] == 'binary':
+    if task == 'binary':
         model = resnet152(num_classes=2)
-    elif params[1] == 'reg':
+        loss_function = F.cross_entropy
+        train_dataloader = SeismicBinaryDataLoader('train', batch_size, './data')
+        eval_dataloader = SeismicBinaryDataLoader('eval', batch_size, './data')
+        test_dataloader = SeismicBinaryDataLoader('test', batch_size, './data')
+    elif task == 'reg':
         model = resnet152(num_classes=1)
+        loss_function = F.mse_loss
+        train_dataloader = SeismicRegDataLoader('train', batch_size, './data', params[2])
+        eval_dataloader = SeismicRegDataLoader('eval', batch_size, './data', params[2])
+        test_dataloader = SeismicRegDataLoader('test', batch_size, './data', params[2])
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
     
@@ -153,14 +171,7 @@ if __name__ == '__main__':
     model = model.to(device)
     optimizer = optim.Adam(model.parameters(), lr=alpha, betas=(beta1, beta2), eps=epsilon, weight_decay=weight_decay)
     
-    train_dataloader = SeismicDataLoader('train', batch_size, './data')
-    eval_dataloader = SeismicDataLoader('eval', batch_size, './data')
-    test_dataloader = SeismicDataLoader('test', batch_size, './data')
     print('datas are ready')
-    if params[1] == 'binary':
-        loss_function = F.cross_entropy
-    elif params[1] == 'reg':
-        loss_function = F.mse_loss
     train(train_dataloader, eval_dataloader, model, loss_function, optimizer, epoches, params[1])
     print('the train part has been done')
 

@@ -7,18 +7,28 @@ from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
 import matplotlib.image as mpimg
 
+from utils.parse_catalog import get_earthquakes_dir, get_glacial_dir
 from config.constant import RANDOM_STATE
 
-class SeismicBinaryDataset(Dataset):
-    def __init__(self, mode, path):
+class SeismicRegDataset(Dataset):
+    def __init__(self, mode, path, task):
+        """
+        mode: test, train, eval
+        path: the path to the data folder
+        task: earthquakes, glacial
+        """
         self.mode = mode
-        self.CLASS = ['earthquakes', 'glacial']
-        self.num_class = len(self.CLASS)
+        self.task = task
         earthquakes = os.listdir(f'{path}/earthquakes')
         earthquakes = [f'{path}/earthquakes/{file}' for file in earthquakes]
         glacial = os.listdir(f'{path}/glacial')
         glacial = [f'{path}/glacial/{file}' for file in glacial]
-        dirs = earthquakes + glacial
+        if task == 'earthquakes':
+            self.target_dict = get_earthquakes_dir(f'{path}/earthquakes_catalog.txt')
+            dirs = earthquakes
+        elif task == 'glacial':
+            self.target_dict = get_glacial_dir(f'{path}/glacial_catalog.txt')
+            dirs = glacial
         train_dirs, test_dirs = train_test_split(dirs, test_size=.2, random_state=RANDOM_STATE)
         train_dirs, val_dirs = train_test_split(train_dirs, test_size=.3, random_state=RANDOM_STATE)
         self.train_dirs, self.val_dirs, self.test_dirs = train_dirs, val_dirs, test_dirs
@@ -32,11 +42,9 @@ class SeismicBinaryDataset(Dataset):
             path = self.val_dirs[index]
         data = torch.FloatTensor(np.transpose(mpimg.imread(path).copy(), [2, 0, 1]))
         words = path.split('/')
-        label = words[2]
-        indice = self.CLASS.index(label)
-        target = np.zeros(self.num_class)
-        target[indice] = 1
-        target = torch.FloatTensor(target)
+        date = words[3].split('_')[1].split('.')[0]
+        target = self.target_dict[date]
+        target = torch.FloatTensor([target])
         return data, target
 
     def __len__(self):
@@ -47,8 +55,8 @@ class SeismicBinaryDataset(Dataset):
         else:
             return len(self.train_dirs)
 
-def SeismicBinaryDataLoader(mode, batch_size, path):
-    dataset = SeismicBinaryDataset(mode, path)
+def SeismicRegDataLoader(mode, batch_size, path, task):
+    dataset = SeismicRegDataset(mode, path, task)
     dataloader = DataLoader(
         dataset=dataset,
         shuffle=(False if mode=='test' else True),
