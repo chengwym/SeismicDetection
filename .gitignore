@@ -1,2 +1,4 @@
 *.pyc
+*.mseed
+*.ipynb
 /example/*
