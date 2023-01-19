@@ -18,7 +18,7 @@ from config.config import model_dict, path, opt
 
 def valid_part(dataloader: DataLoader,
                model: nn.Module,
-               loss_function: function):
+               loss_function):
     """
     Giving the dataloader, model and loss funtion, compute the loss.
     """
@@ -86,7 +86,7 @@ def check_accuracy_regress(dataloader: DataLoader,
 def train(train_dataloader: DataLoader,
           eval_dataloader: DataLoader,
           model: nn.Module, 
-          loss_function: function,
+          loss_function,
           optimizer: optim.Optimizer,
           epoches: int,
           task: str,
