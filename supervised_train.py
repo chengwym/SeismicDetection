@@ -148,13 +148,13 @@ if __name__ == '__main__':
     weight_decay = opt['weight_decay']
 
     if task == 'binary':
-        model = resnet152(num_classes=2)
+        model = resnet50(num_classes=2)
         loss_function = F.cross_entropy
         train_dataloader = SeismicBinaryDataLoader('train', batch_size, './data')
         eval_dataloader = SeismicBinaryDataLoader('eval', batch_size, './data')
         test_dataloader = SeismicBinaryDataLoader('test', batch_size, './data')
     elif task == 'reg':
-        model = resnet152(num_classes=1)
+        model = resnet50(num_classes=1)
         loss_function = F.mse_loss
         train_dataloader = SeismicRegDataLoader('train', batch_size, './data', params[2])
         eval_dataloader = SeismicRegDataLoader('eval', batch_size, './data', params[2])
