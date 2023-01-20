@@ -1,3 +1,5 @@
+__author__ = "Jingbo Cheng"
+
 def get_earthquakes_dir(path):
     earthquakes_dir = {}
     with open(path, 'r') as f:
