@@ -29,7 +29,7 @@ def valid_part(dataloader: DataLoader,
             x = x.to(device)
             y = y.to(device)
             scores = model(x)
-            _loss = loss_function(y, scores)
+            _loss = loss_function(scores, y)
             loss += _loss.item()
     return loss
 

@@ -1,4 +1,4 @@
-__author__ = "Jingbo Cheng"
+__author__ = "Jingbo Cheng, Tianyi Zhang"
 
 import os
 from PIL import Image
